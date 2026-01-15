@@ -1,0 +1,157 @@
+#include <iostream>
+#include <fstream>
+
+using namespace std;
+
+
+struct Visit {
+    int duration;  
+    int year;      
+    int month;     
+    int code;      
+};
+
+int main() {
+    
+    setlocale(LC_ALL, "RU");
+
+    string filename = "test.txt";
+
+    cout << "=== ПРОГРАММА ДЛЯ АНАЛИЗА ПОСЕЩЕНИЙ ===\n\n";
+
+    // создаем файл
+    ifstream testFile(filename);
+    if (!testFile.is_open()) {
+        cout << "Файл 'test.txt' не найден. Создаю тестовый файл...\n";
+
+        ofstream createFile(filename);
+        if (createFile.is_open()) {
+            
+            createFile << "45\n";       
+            createFile << "6\n";        
+            createFile << "5 2005 3 45\n";
+            createFile << "8 2005 7 45\n";
+            createFile << "10 2006 5 45\n";
+            createFile << "3 2006 8 45\n";
+            createFile << "4 2005 8 67\n";
+            createFile << "6 2007 2 45\n";
+            createFile.close();
+
+            cout << "Файл 'test.txt' создан с тестовыми данными.\n";
+        }
+        else {
+            cout << "Ошибка! Не удалось создать файл.\n";
+            return 1;
+        }
+    }
+    else {
+        cout << "Файл 'test.txt' найден.\n";
+        testFile.close();
+    }
+
+    cout << endl;
+
+    // Открываем файл для чтения данных
+    ifstream file(filename);
+
+   
+    int K;
+    file >> K;
+    cout << "Код клиента для поиска: " << K << endl;
+
+    
+    int N;
+    file >> N;
+    cout << "Количество записей: " << N << endl;
+
+    
+    Visit* visits = new Visit[N];
+
+    
+    for (int i = 0; i < N; i++) {
+        file >> visits[i].duration
+            >> visits[i].year
+            >> visits[i].month
+            >> visits[i].code;
+    }
+
+    file.close();
+
+    
+    cout << "\nПрочитанные данные:\n";
+    cout << "№ | Часы | Год  | Месяц | Код\n";
+    cout << "------------------------------\n";
+
+    for (int i = 0; i < N; i++) {
+        cout << i + 1 << " | "
+            << visits[i].duration << "    | "
+            << visits[i].year << " | "
+            << visits[i].month << "     | "
+            << visits[i].code << endl;
+    }
+
+    
+    // Массивы для результатов 11 лет
+    int maxDuration[11] = { 0 };
+    int bestMonth[11] = { 0 };
+    bool hasDataForYear[11] = { false };
+
+    bool clientFound = false;
+
+    
+    for (int i = 0; i < N; i++) {
+        if (visits[i].code == K) {
+            clientFound = true;
+
+            int yearIndex = visits[i].year - 2000;
+
+            if (yearIndex >= 0 && yearIndex <= 10) {
+                // Если данных для этого года еще нет ИЛИ нашли большую продолжительность ИЛИ такая же продолжительность, но меньший месяц
+                if (!hasDataForYear[yearIndex] ||
+                    visits[i].duration > maxDuration[yearIndex] ||
+                    (visits[i].duration == maxDuration[yearIndex] &&
+                        visits[i].month < bestMonth[yearIndex])) {
+
+                    maxDuration[yearIndex] = visits[i].duration;
+                    bestMonth[yearIndex] = visits[i].month;
+                    hasDataForYear[yearIndex] = true;
+                }
+            }
+        }
+    }
+
+    
+    cout << "\n=================================\n";
+    if (!clientFound) {
+        cout << "Нет данных " << K << endl;
+    }
+    else {
+        cout << "РЕЗУЛЬТАТ для клиента " << K << ":\n";
+        cout << "Год   | Месяц | Продолжительность\n";
+        cout << "---------------------------------\n";
+
+        
+        bool hasOutput = false;
+        for (int year = 2010; year >= 2000; year--) {
+            int yearIndex = year - 2000;
+
+            if (hasDataForYear[yearIndex]) {
+                cout << year << "  | "
+                    << bestMonth[yearIndex] << "     | "
+                    << maxDuration[yearIndex] << endl;
+                hasOutput = true;
+            }
+        }
+
+        if (!hasOutput) {
+            cout << "Нет данных за годы 2000-2010\n";
+        }
+    }
+
+    // Освобождаем память
+    delete[] visits;
+
+    
+
+    return 0;
+}

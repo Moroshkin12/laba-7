@@ -1,0 +1,213 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+
+
+const int CIRCLE = 1;
+const int SQUARE = 2;
+const int LINE = 3;
+
+
+struct Shape {
+    string color;
+    int type;  
+
+    // Union для хранения размеров (разные типы в одной памяти)
+    union {
+        short int radius;  
+        int side;          
+        float length;      
+    } size;
+};
+
+// Функция для ввода одной фигуры
+Shape inputShape() {
+    Shape shape;
+
+    cout << "Введите цвет фигуры: ";
+    cin >> shape.color;
+
+    cout << "Выберите тип фигуры:\n";
+    cout << "1 - Круг\n";
+    cout << "2 - Квадрат\n";
+    cout << "3 - Отрезок\n";
+    cout << "Ваш выбор (1-3): ";
+    cin >> shape.type;
+
+    
+    while (shape.type < 1 || shape.type > 3) {
+        cout << "Ошибка! Введите число от 1 до 3: ";
+        cin >> shape.type;
+    }
+
+    
+    if (shape.type == CIRCLE) {
+        cout << "Введите радиус круга: ";
+        cin >> shape.size.radius;
+    }
+    else if (shape.type == SQUARE) {
+        cout << "Введите сторону квадрата: ";
+        cin >> shape.size.side;
+    }
+    else if (shape.type == LINE) {
+        cout << "Введите длину отрезка: ";
+        cin >> shape.size.length;
+    }
+
+    return shape;
+}
+
+
+string getTypeName(int type) {
+    if (type == CIRCLE) return "Круг";
+    if (type == SQUARE) return "Квадрат";
+    if (type == LINE) return "Отрезок";
+    return "Неизвестно";
+}
+
+// переводим в строку в числовое значение
+string getSizeValue(const Shape& shape) {
+    if (shape.type == CIRCLE) {
+        return to_string(shape.size.radius);
+    }
+    else if (shape.type == SQUARE) {
+        return to_string(shape.size.side);
+    }
+    else if (shape.type == LINE) {
+        return to_string(shape.size.length);
+    }
+    return "0";
+}
+
+int main() {
+   setlocale(LC_ALL, "RU");
+
+    int N;
+    cout << "Введите количество фигур: ";
+    cin >> N;
+
+    
+    if (N <= 0) {
+        cout << "Ошибка! Количество должно быть больше 0.\n";
+        return 1;
+    }
+
+    
+    Shape* shapes = new Shape[N];
+
+    
+    cout << "\n=== ВВОД ДАННЫХ ===\n";
+    for (int i = 0; i < N; i++) {
+        cout << "\n--- Фигура " << i + 1 << " ---\n";
+        shapes[i] = inputShape();
+    }
+
+    // Сохраняем данные в файл
+    ofstream file("figures.txt");
+
+    if (!file.is_open()) {
+        cout << "Ошибка! Не удалось создать файл.\n";
+        delete[] shapes;
+        return 1;
+    }
+
+    
+    for (int i = 0; i < N; i++) {
+        file << shapes[i].color << " ";
+        file << shapes[i].type << " ";
+
+        if (shapes[i].type == CIRCLE) {
+            file << shapes[i].size.radius;
+        }
+        else if (shapes[i].type == SQUARE) {
+            file << shapes[i].size.side;
+        }
+        else if (shapes[i].type == LINE) {
+            file << shapes[i].size.length;
+        }
+
+        file << endl;
+    }
+
+    file.close();
+    cout << "\nДанные сохранены в файл 'figures.txt'\n";
+
+    
+    cout << "\n=== СОДЕРЖИМОЕ ФАЙЛА ===\n";
+
+    ifstream inputFile("figures.txt");
+
+    if (!inputFile.is_open()) {
+        cout << "Ошибка! Не удалось открыть файл для чтения.\n";
+        delete[] shapes;
+        return 1;
+    }
+
+    // Создаем временный массив для чтения из файла
+    Shape* fileShapes = new Shape[N];
+    int count = 0;
+
+    // Читаем данные из файла
+    string color;
+    int type;
+
+    while (count < N && inputFile >> color >> type) {
+        fileShapes[count].color = color;
+        fileShapes[count].type = type;
+
+        if (type == CIRCLE) {
+            inputFile >> fileShapes[count].size.radius;
+        }
+        else if (type == SQUARE) {
+            inputFile >> fileShapes[count].size.side;
+        }
+        else if (type == LINE) {
+            inputFile >> fileShapes[count].size.length;
+        }
+
+        count++;
+    }
+
+    inputFile.close();
+
+    
+    cout << "\n+-----------------+-----------------+-----------------+\n";
+    cout << "| Цвет            | Тип             | Размер          |\n";
+    cout << "+-----------------+-----------------+-----------------+\n";
+
+    for (int i = 0; i < count; i++) {
+        cout << "| " << left << setw(15) << fileShapes[i].color << " ";
+        cout << "| " << left << setw(15) << getTypeName(fileShapes[i].type) << " ";
+        cout << "| " << left << setw(15) << getSizeValue(fileShapes[i]) << " |\n";
+    }
+
+    cout << "+-----------------+-----------------+-----------------+\n";
+
+    
+    cout << "\n=== СТАТИСТИКА ===\n";
+    int circleCount = 0, squareCount = 0, lineCount = 0;
+
+    for (int i = 0; i < N; i++) {
+        if (shapes[i].type == CIRCLE) circleCount++;
+        else if (shapes[i].type == SQUARE) squareCount++;
+        else if (shapes[i].type == LINE) lineCount++;
+    }
+
+    cout << "Кругов: " << circleCount << endl;
+    cout << "Квадратов: " << squareCount << endl;
+    cout << "Отрезков: " << lineCount << endl;
+    cout << "Всего фигур: " << N << endl;
+
+    // Освобождаем память
+    delete[] shapes;
+    delete[] fileShapes;
+
+    cout << "\nНажмите Enter для выхода...";
+    cin.ignore();
+    cin.get();
+
+    return 0;
+}

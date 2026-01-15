@@ -1,0 +1,105 @@
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+int main() {
+    setlocale(LC_ALL, "RU");
+    srand(time(0));
+
+    int N;
+    cout << "Введите количество элементов N: ";
+    cin >> N;
+
+    
+    int* arr = new int[N];
+
+    
+    cout << "\nИсходный массив: ";
+    for (int i = 0; i < N; i++) {
+        arr[i] = rand() % 100;  
+        cout << arr[i] << " ";
+    }
+    cout << endl;
+
+    
+    ofstream file("bubble sort.txt");
+    if (!file.is_open()) {
+        cout << "Ошибка открытия файла!" << endl;
+        delete[] arr;
+        return 1;
+    }
+
+    
+    file << "Исходный массив: ";
+    for (int i = 0; i < N; i++) {
+        file << arr[i] << " ";
+    }
+    file << "\n\nПротокол сортировки:\n";
+
+    // Сортировка методом простых обменов
+    for (int i = 0; i < N - 1; i++) {
+        bool swapped = false;
+
+        
+        for (int j = N - 1; j > i; j--) {
+            if (arr[j] < arr[j - 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j - 1];
+                arr[j - 1] = temp;
+                swapped = true;
+            }
+        }
+
+       
+        cout << "После итерации " << i + 1 << ": ";
+        file << "После итерации " << i + 1 << ": ";
+
+        
+        for (int k = 0; k <= i; k++) {
+            cout << arr[k] << " ";
+            file << arr[k] << " ";
+        }
+
+        
+        cout << "| ";
+        file << "| ";
+
+       
+        for (int k = i + 1; k < N; k++) {
+            cout << arr[k] << " ";
+            file << arr[k] << " ";
+        }
+
+        cout << endl;
+        file << endl;
+
+        
+        if (!swapped) {
+            cout << "Массив отсортирован! УРА!!!" << endl;
+            file << "Массив отсортирован! УРА!!!" << endl;
+            break;
+        }
+    }
+
+    
+    cout << "\nОтсортированный массив: ";
+    file << "\nОтсортированный массив: ";
+
+    for (int i = 0; i < N; i++) {
+        cout << arr[i] << " ";
+        file << arr[i] << " ";
+    }
+    cout << endl;
+
+    
+    file.close();
+    cout << "\nПротокол сортировки сохранен в файл: bubble sort.txt" << endl;
+
+    // Освобождаем память
+    delete[] arr;
+
+    return 0;
+}
